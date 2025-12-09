@@ -4,6 +4,10 @@
 serve:
 	./manage.py runserver 8000
 
+init:
+	./manage.py migrate
+	./manage.py collectstatic --noinput
+
 fixtures:
 	./manage.py loaddata fixtures/actors.json
 	./manage.py loaddata fixtures/genre.json
