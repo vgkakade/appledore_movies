@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "drf_yasg",
+    "django_elasticsearch_dsl",
     # local
     "movies",
     "accounts",
@@ -90,6 +91,7 @@ WSGI_APPLICATION = "appledore_movies.wsgi.application"
 DOCKER_IP = os.getenv("DOCKER_IP", "localhost")
 DATABASE_PORT = os.getenv("DATABASE_PORT", "5432")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "docker")
+ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "http://localhost:9200")
 
 db_url = f"postgres://docker:docker@{DOCKER_IP}:{DATABASE_PORT}/{DATABASE_NAME}"
 
@@ -137,3 +139,5 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+ELASTICSEARCH_DSL = {"default": {"hosts": ELASTICSEARCH_HOST}}
