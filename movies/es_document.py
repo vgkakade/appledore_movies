@@ -1,3 +1,5 @@
+from ast import alias
+
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -23,10 +25,11 @@ class MovieDocument(Document):
     )
 
     class Index:
-        name = "movies"
+        name = "products"
+        aliases = {"movie_alias": {}}
         settings = {
-            "number_of_shards": 1,
-            "number_of_replicas": 0,
+            "number_of_shards": 2,
+            "number_of_replicas": 1,
         }
 
     class Django:
