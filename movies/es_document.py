@@ -1,4 +1,4 @@
-from ast import alias
+from datetime import datetime
 
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
@@ -8,25 +8,13 @@ from .models import Movies, Genre, Actor, Language
 
 @registry.register_document
 class MovieDocument(Document):
-    genre = fields.ObjectField(
-        properties={
-            "name": fields.TextField(),
-        }
-    )
-    language = fields.ObjectField(
-        properties={
-            "name": fields.TextField(),
-        }
-    )
-    cast = fields.ObjectField(
-        properties={
-            "name": fields.TextField(),
-        }
-    )
+    genre = fields.KeywordField(multi=True)
+    language = fields.KeywordField(multi=True)
+    cast = fields.KeywordField(multi=True)
 
     class Index:
-        name = "products"
-        aliases = {"movie_alias": {}}
+        name = f"products_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        aliases = {"movies": {}}
         settings = {
             "number_of_shards": 2,
             "number_of_replicas": 1,

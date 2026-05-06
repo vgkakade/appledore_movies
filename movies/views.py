@@ -1,3 +1,6 @@
+from pydoc import doc
+
+from elasticsearch import Elasticsearch
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -8,6 +11,7 @@ from elasticsearch_dsl import Search, Q
 
 from .serializer import MovieSerializer, MovieDetailSerializer
 from .models import Movies
+from django.conf import settings
 
 
 # Create your views here.
@@ -16,16 +20,15 @@ class MovieSearchView(APIView):
 
     def get(self, request):
         query = request.query_params.get("q", "").strip()
+        # print("Query:", query)
         genre = request.query_params.get("genre", "").strip()
         rating_gte = request.query_params.get(
             "rating__gte", ""
         ).strip()  # fixed param name
         ordering = request.query_params.get("ordering", "-rating")
 
-        # Start fresh every time
-        s = Search(index="movies").extra(track_total_hits=True)
+        s = Search(index="products").extra(track_total_hits=True)
 
-        # Default: show all if no filters/search
         has_filter = bool(query or genre or rating_gte)
         if has_filter:
             # We will add queries/filters below
@@ -33,10 +36,7 @@ class MovieSearchView(APIView):
         else:
             s = s.query("match_all")
 
-        # Full-text search
         if query:
-            from elasticsearch_dsl import Q  # import here or at top
-
             s = s.query(
                 Q(
                     "multi_match",
@@ -44,8 +44,8 @@ class MovieSearchView(APIView):
                     fields=[
                         "title^5",
                         "description^1",
-                        "cast.name^3",
-                        "genre.name^2",
+                        "cast.name^2",
+                        "genre.name^1",
                         "language.name^1",
                     ],
                     fuzziness="AUTO",
@@ -118,20 +118,10 @@ class MovieSearchView(APIView):
 
 
 @api_view(["GET"])
-def index(request):
-    movies = Movies.objects.all()
-    if movies:
-        serializer = MovieSerializer(movies, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response({"data": "No movies"}, status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(["GET"])
 def movie_detail(request, id):
-    try:
-        movie = Movies.objects.get(id=id)
-    except Movies.DoesNotExist:
-        return Response({"data": "No movie found"}, status=status.HTTP_404_NOT_FOUND)
+    es = Elasticsearch(settings.ELASTICSEARCH_HOST)
+    doc = es.get(index="products", id=id)
+    if doc:
+        return Response({"id": doc["_id"], **doc["_source"]}, status=status.HTTP_200_OK)
 
-    serializer = MovieDetailSerializer(movie)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response({"data": "No movie found"}, status=status.HTTP_404_NOT_FOUND)
