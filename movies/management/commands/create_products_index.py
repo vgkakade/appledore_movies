@@ -10,9 +10,23 @@ from movies.models import Movies
 from appledore_movies.services.es_movie_serializer import serialize_movie
 
 
-def _generate_actions(movies, index_name):
-    for movie in movies:
-        yield {"_index": index_name, "_id": movie.id, "_source": serialize_movie(movie)}
+def _generate_actions(index_name, chunk_size=1000):
+    offset = 0
+    while True:
+        movies = Movies.objects.prefetch_related("language", "cast", "genre")[
+            offset : offset + chunk_size
+        ]
+        if not movies:
+            break
+
+        for movie in movies:
+            yield {
+                "_index": index_name,
+                "_id": movie.id,
+                "_source": serialize_movie(movie),
+            }
+
+        offset += chunk_size
 
 
 class Command(BaseCommand):
@@ -38,9 +52,7 @@ class Command(BaseCommand):
             self.stdout.write("Indexing data now..")
             bulk(
                 es,
-                _generate_actions(
-                    Movies.objects.all().iterator(chunk_size=CHUNK_SIZE), new_index_name
-                ),
+                _generate_actions(new_index_name),
                 chunk_size=CHUNK_SIZE,
             )
 
