@@ -1,6 +1,3 @@
-from curses import pair_content
-from sys import path_hooks
-
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -9,7 +6,6 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
-from urllib3 import request
 from .es_document import MovieDocument
 
 from django.conf import settings
