@@ -10,6 +10,32 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
 
+  elasticsearch:
+    image: elasticsearch:9.2.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - default
+
+  kibana:
+    image: kibana:9.2.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - default
+
 volumes:
   postgres:
     name: ${VOLUME_PREFIX}_postgres14
+  elasticsearch-data:
+    name: ${VOLUME_PREFIX}_elasticsearch
