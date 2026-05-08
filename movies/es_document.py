@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 
@@ -13,7 +11,7 @@ class MovieDocument(Document):
     cast = fields.KeywordField(multi=True)
 
     class Index:
-        name = f"products_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        name = "products"
         aliases = {"movies": {}}
         settings = {
             "number_of_shards": 2,
