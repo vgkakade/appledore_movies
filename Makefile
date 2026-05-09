@@ -16,3 +16,6 @@ fixtures:
 
 superuser:
 	./manage.py createsuperuser
+
+celery:
+	celery -A appledore_movies worker --loglevel=info
