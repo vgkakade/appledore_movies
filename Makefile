@@ -19,3 +19,6 @@ superuser:
 
 celery:
 	celery -A appledore_movies worker --loglevel=info
+
+index_movies:
+	./manage.py create_products_index
