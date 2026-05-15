@@ -20,8 +20,15 @@ def sync_products():
     if last_synced is None:
         last_synced = datetime(2000, 1, 1)
 
+    sync_started_at = datetime.now()
+
     updated_movies = Movies.objects.filter(updated_on__gt=last_synced).prefetch_related(
         "genres", "actors", "languages"
     )
+    if not updated_movies.exists():
+        print("No new updates to sync.")
+        return
     bulk_index(updated_movies, index_name)
-    cache.set("last_synced", datetime.now())
+    cache.set("last_synced", sync_started_at)
+
+    return f"Synced {len(updated_movies)} movies"
