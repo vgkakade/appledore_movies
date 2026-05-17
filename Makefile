@@ -4,6 +4,10 @@
 serve:
 	./manage.py runserver 8000
 
+init:
+	./manage.py migrate
+	./manage.py collectstatic --noinput
+
 fixtures:
 	./manage.py loaddata fixtures/actors.json
 	./manage.py loaddata fixtures/genre.json
@@ -12,3 +16,9 @@ fixtures:
 
 superuser:
 	./manage.py createsuperuser
+
+celery:
+	celery -A appledore_movies worker --loglevel=info
+
+index_movies:
+	./manage.py create_products_index

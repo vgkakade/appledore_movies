@@ -1,4 +1,6 @@
-venv
+.venv
 .direnv
 .idea
 /__pycache__/
+*.pyc
+/staticfiles/

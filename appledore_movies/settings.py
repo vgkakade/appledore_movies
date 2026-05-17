@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "drf_yasg",
+    "django_elasticsearch_dsl",
     # local
     "movies",
     "accounts",
@@ -90,11 +91,10 @@ WSGI_APPLICATION = "appledore_movies.wsgi.application"
 DOCKER_IP = os.getenv("DOCKER_IP", "localhost")
 DATABASE_PORT = os.getenv("DATABASE_PORT", "5432")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "docker")
+ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "http://localhost:9200")
 
 db_url = f"postgres://docker:docker@{DOCKER_IP}:{DATABASE_PORT}/{DATABASE_NAME}"
-
 DATABASES = {"default": dj_database_url.config(default=db_url)}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -137,3 +137,17 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+ELASTICSEARCH_DSL = {"default": {"hosts": ELASTICSEARCH_HOST}}
+
+
+######################### REDIS CONFIGURATION #########################
+CACHE = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1"),
+    }
+}
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/2")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/2")

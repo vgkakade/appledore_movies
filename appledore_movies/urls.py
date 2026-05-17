@@ -24,9 +24,9 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Appledore Movies API",
+        title="Products API",
         default_version="v1",
-        description="Test description",
+        description="Rest API for Movies",
         terms_of_service="https://www.google.com/policies/terms/",
         contact=openapi.Contact(email="contact@appledore.com"),
         license=openapi.License(name="Vk License"),
