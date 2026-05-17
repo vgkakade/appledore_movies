@@ -34,8 +34,20 @@ services:
     networks:
       - default
 
+  redis:
+    image: redis:8.8-m03-alpine3.23
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - redis-data:/data
+    depends_on:
+      - elasticsearch
+      - postgres
+
 volumes:
   postgres:
     name: ${VOLUME_PREFIX}_postgres14
   elasticsearch-data:
     name: ${VOLUME_PREFIX}_elasticsearch
+  redis-data:
+    name: ${VOLUME_PREFIX}_redis
