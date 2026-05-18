@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.core.cache import cache
+from django.utils import timezone
 from .es_indexer import bulk_index
 from .es_document import MovieDocument
 
@@ -18,17 +19,18 @@ def sync_products():
     index_name = MovieDocument.Index.name
 
     if last_synced is None:
-        last_synced = datetime(2000, 1, 1)
+        last_synced = timezone.make_aware(datetime(2000, 1, 1))
 
-    sync_started_at = datetime.now()
+    sync_started_at = timezone.now()
 
     updated_movies = Movies.objects.filter(updated_on__gt=last_synced).prefetch_related(
-        "genres", "cast", "languages"
+        "genre", "cast", "language"
     )
     if not updated_movies.exists():
         print("No new updates to sync.")
         return
     result = bulk_index(updated_movies, index_name)
+
     if result:
         cache.set("last_synced", sync_started_at)
         return f"Synced {len(updated_movies)} movies"
