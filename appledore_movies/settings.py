@@ -89,13 +89,12 @@ WSGI_APPLICATION = "appledore_movies.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-DOCKER_IP = os.getenv("DOCKER_IP", "localhost")
 DATABASE_PORT = os.getenv("DATABASE_PORT", "5432")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "docker")
 DATABASE_HOST = os.getenv("DATABASE_HOST", "postgres")
 ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "http://localhost:9200")
 
-db_url = f"{DATABASE_HOST}://docker:docker@{DOCKER_IP}:{DATABASE_PORT}/{DATABASE_NAME}"
+db_url = f"postgres://docker:docker@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
 DATABASES = {"default": dj_database_url.config(default=db_url)}
 
 # Password validation
