@@ -15,6 +15,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 import dj_database_url
+from celery.beat import crontab
 
 load_dotenv()
 
@@ -88,12 +89,12 @@ WSGI_APPLICATION = "appledore_movies.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-DOCKER_IP = os.getenv("DOCKER_IP", "localhost")
 DATABASE_PORT = os.getenv("DATABASE_PORT", "5432")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "docker")
+DATABASE_HOST = os.getenv("DATABASE_HOST", "postgres")
 ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "http://localhost:9200")
 
-db_url = f"postgres://docker:docker@{DOCKER_IP}:{DATABASE_PORT}/{DATABASE_NAME}"
+db_url = f"postgres://docker:docker@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
 DATABASES = {"default": dj_database_url.config(default=db_url)}
 
 # Password validation
@@ -141,7 +142,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 ELASTICSEARCH_DSL = {"default": {"hosts": ELASTICSEARCH_HOST}}
 
 
-######################### REDIS CONFIGURATION #########################
+######################### REDIS/CELERY CONFIGURATION #########################
 CACHE = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -149,5 +150,13 @@ CACHE = {
     }
 }
 
+CELERY_BEAT_SCHEDULE = {
+    "sync_products": {
+        "task": "movies.tasks.sync_products",
+        "schedule": crontab(minute=0, hour="*"),  # every hour
+    }
+}
+
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/2")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/2")
+CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE", "UTC")

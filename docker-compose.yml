@@ -1,4 +1,16 @@
 services:
+  django:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - ${DJANGO_PORT}:8000
+    depends_on:
+      - postgres
+      - elasticsearch
+      - redis
+    env_file:
+      - .env
+
   postgres:
     image: postgres:14
     environment:
@@ -20,8 +32,6 @@ services:
       - "9200:9200"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
-    networks:
-      - default
 
   kibana:
     image: kibana:9.2.0
@@ -31,11 +41,38 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
-    networks:
-      - default
+
+  redis:
+    image: redis:8.8-m03-alpine3.23
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis-data:/data
+
+  celery_worker:
+    build: .
+    command: celery -A appledore_movies worker --loglevel=info
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+    env_file:
+      - .env
+
+  celery_beat:
+    build: .
+    command: celery -A appledore_movies beat --loglevel=info
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+    env_file:
+      - .env
 
 volumes:
   postgres:
     name: ${VOLUME_PREFIX}_postgres14
   elasticsearch-data:
     name: ${VOLUME_PREFIX}_elasticsearch
+  redis-data:
+    name: ${VOLUME_PREFIX}_redis
