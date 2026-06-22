@@ -52,10 +52,8 @@ INSTALLED_APPS = [
     "drf_yasg",
     "django_elasticsearch_dsl",
     # local
-    "movies",
+    "apps.movies",
     "accounts",
-    "cart",
-    "orders",
 ]
 
 MIDDLEWARE = [
@@ -157,7 +155,7 @@ CACHE = {
 
 CELERY_BEAT_SCHEDULE = {
     "sync_products": {
-        "task": "movies.tasks.sync_products",
+        "task": "apps.movies.tasks.sync_products",
         "schedule": crontab(minute=0, hour="*"),  # every hour
     }
 }
