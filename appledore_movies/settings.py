@@ -54,8 +54,6 @@ INSTALLED_APPS = [
     # local
     "movies",
     "accounts",
-    "cart",
-    "orders",
 ]
 
 MIDDLEWARE = [
