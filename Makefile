@@ -5,8 +5,11 @@ serve:
 	./manage.py runserver 8000
 
 init:
+	pip install -r requirements.txt
+	pre-commit install
 	./manage.py migrate
 	./manage.py collectstatic --noinput
+	./manage.py superuserexists || ./manage.py createsuperuser
 
 fixtures:
 	./manage.py loaddata fixtures/actors.json

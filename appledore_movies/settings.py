@@ -17,6 +17,8 @@ from dotenv import load_dotenv
 import dj_database_url
 from celery.beat import crontab
 
+from .logging_config import get_logging_config
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -30,10 +32,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-6b7r2*znt9t5z2#m964$mo&+lro6wg16o(8@g($q(%k0x8p&@4"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+DEBUG = False
+APPEND_SLASH = True
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+LOGGING = get_logging_config(DEBUG)
 
 # Application definition
 
@@ -90,11 +92,14 @@ WSGI_APPLICATION = "appledore_movies.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 DATABASE_PORT = os.getenv("DATABASE_PORT", "5432")
+DOCKER_IP = os.getenv("DOCKER_IP", "localhost")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "docker")
 DATABASE_HOST = os.getenv("DATABASE_HOST", "postgres")
 ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "http://localhost:9200")
+DB_USERNAME = os.getenv("DATABASE_USERNAME", "docker")
+DB_PASSWORD = os.getenv("DATABASE_PASSWORD", "docker")
 
-db_url = f"postgres://docker:docker@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
+db_url = f"postgres://{DB_USERNAME}:{DB_PASSWORD}@{DOCKER_IP}:{DATABASE_PORT}/{DATABASE_NAME}"  # noqa: E501
 DATABASES = {"default": dj_database_url.config(default=db_url)}
 
 # Password validation
