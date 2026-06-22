@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -9,6 +11,8 @@ from elasticsearch_dsl import Search
 from .es_document import MovieDocument
 
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 class MovieSearchView(APIView):
@@ -36,6 +40,7 @@ class MovieSearchView(APIView):
         paginator.limit = limit
         paginator.offset = offset
         paginator.request = request
+        logger.info("Here I am Fetching movies list")
         return paginator.get_paginated_response(results)
 
 
