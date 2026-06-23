@@ -1,5 +1,13 @@
 from django.db import models
 
+PRODUCT_STATUS = (("active", "Active"), ("archieved", "Archieved"))
+
+
+class ProductStatus:
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+    DELETED = "deleted"
+
 
 class Actor(models.Model):
     name = models.CharField(max_length=200)
@@ -37,6 +45,14 @@ class Movies(models.Model):
     cast = models.ManyToManyField(Actor, related_name="movies", blank=True)
     added_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
+    status = models.CharField(
+        choices=[
+            (ProductStatus.ACTIVE, "Active"),
+            (ProductStatus.ARCHIVED, "Archived"),
+            (ProductStatus.DELETED, "Deleted"),
+        ],
+        default=ProductStatus.ACTIVE,
+    )
 
     def __str__(self):
         return self.title

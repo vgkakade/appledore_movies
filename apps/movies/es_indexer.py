@@ -5,12 +5,11 @@ from django.conf import settings
 from elasticsearch import Elasticsearch, NotFoundError
 from elasticsearch.helpers import bulk
 
-from movies.models import Movies
-from movies.es_document import MovieDocument
+from .models import Movies
+from .es_document import MovieDocument
 from appledore_movies.services.es_movie_serializer import serialize_movie
 
 logger = logging.getLogger(__name__)
-# es = Elasticsearch(settings.ELASTICSEARCH_HOST)
 CHUNK_SIZE = 1000
 
 
