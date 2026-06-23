@@ -1,5 +1,7 @@
 from django.db import models
 
+PRODUCT_STATUS = (("active", "Active"), ("archieved", "Archieved"))
+
 
 class ProductStatus:
     ACTIVE = "active"
