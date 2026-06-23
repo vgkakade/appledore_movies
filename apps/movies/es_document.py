@@ -27,5 +27,6 @@ class MovieDocument(Document):
             "release_date",
             "price",
             "rating",
+            "status",
         ]
         related_models = [Genre, Actor, Language]
