@@ -5,7 +5,7 @@ from .es_indexer import bulk_index
 from .es_document import MovieDocument
 
 from appledore_movies.celery import app
-from .models import Movies
+from .models import Movies, ProductStatus
 
 
 @app.task
@@ -22,8 +22,10 @@ def sync_products():
 
     sync_started_at = datetime.now()
 
-    updated_movies = Movies.objects.filter(updated_on__gt=last_synced).prefetch_related(
-        "genres", "actors", "languages"
+    updated_movies = (
+        Movies.objects.exclude(status=ProductStatus.DELETED)
+        .filter(updated_on__gt=last_synced)
+        .prefetch_related("genres", "cast", "languages")
     )
     if not updated_movies.exists():
         print("No new updates to sync.")
