@@ -8,4 +8,5 @@ def serialize_movie(movie):
         "language": [lang.name for lang in movie.language.all()],
         "cast": [actor.name for actor in movie.cast.all()],
         "genre": [g.name for g in movie.genre.all()],
+        "status": movie.status,
     }
