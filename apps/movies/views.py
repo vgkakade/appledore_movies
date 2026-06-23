@@ -5,12 +5,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.pagination import LimitOffsetPagination
-
-from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
-from .es_document import MovieDocument
 
-from django.conf import settings
+from .serializer import MovieDetailSerializer
+from .es_document import MovieDocument
+from .models import Movies
 
 logger = logging.getLogger(__name__)
 
@@ -40,15 +39,15 @@ class MovieSearchView(APIView):
         paginator.limit = limit
         paginator.offset = offset
         paginator.request = request
-        logger.info("Here I am Fetching movies list")
         return paginator.get_paginated_response(results)
 
 
 @api_view(["GET"])
 def movie_detail(request, id):
-    es = Elasticsearch(settings.ELASTICSEARCH_HOST)
-    doc = es.get(index="products", id=id)
-    if doc:
-        return Response({"id": doc["_id"], **doc["_source"]}, status=status.HTTP_200_OK)
-
-    return Response({"data": "No movie found"}, status=status.HTTP_404_NOT_FOUND)
+    try:
+        logger.info("Getting produc details", extra={"movie_id": id})
+        movie = Movies.objects.prefetch_related("cast", "language", "genre").get(id=id)
+        serializer = MovieDetailSerializer(movie)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Movies.DoesNotExist:
+        return Response({"data": "No such product"}, status=status.HTTP_404_NOT_FOUND)

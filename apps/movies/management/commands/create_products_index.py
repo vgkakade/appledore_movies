@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from movies.es_indexer import re_index
+from apps.movies.es_indexer import re_index
 
 
 class Command(BaseCommand):
