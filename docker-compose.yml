@@ -1,4 +1,16 @@
 services:
+  django:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - ${DJANGO_PORT}:8000
+    depends_on:
+      - postgres
+      - elasticsearch
+      - redis
+    env_file:
+      - .env
+
   postgres:
     image: postgres:14
     environment:
