@@ -45,6 +45,7 @@ class Movies(models.Model):
     cast = models.ManyToManyField(Actor, related_name="movies", blank=True)
     added_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
+    quantity = models.PositiveIntegerField(default=10)
     status = models.CharField(
         choices=[
             (ProductStatus.ACTIVE, "Active"),
