@@ -13,11 +13,13 @@ logger = logging.getLogger(__name__)
 CHUNK_SIZE = 1000
 
 
-def _generate_actions(movies, index_name):
-    offset = 0
+def _generate_actions(updated_movies, index_name):
+    offset_start = 0
     while True:
-        batch = movies[offset : offset + CHUNK_SIZE]
+        offset_end = offset_start + CHUNK_SIZE
+        batch = updated_movies[offset_start:offset_end]
         if not batch:
+            print(f"No data for offset {offset_start} to {offset_end}")
             break
 
         for movie in batch:
@@ -27,22 +29,22 @@ def _generate_actions(movies, index_name):
                 "_source": serialize_movie(movie),
             }
 
-        offset += CHUNK_SIZE
+        offset_start += CHUNK_SIZE
 
 
-def bulk_index(movies, index_name):
+def bulk_index(updated_movies, index_name):
     es = Elasticsearch(settings.ELASTICSEARCH_HOST)
-    logger.info("Indexing data now..")
+    logger.info("Bulk Indexing start..")
     try:
         bulk(
             client=es,
-            actions=_generate_actions(movies, index_name),
+            actions=_generate_actions(updated_movies, index_name),
             chunk_size=CHUNK_SIZE,
         )
-        logger.info("Data indexed successfully...")
+        logger.info("Bulk Indexing end...")
         return True
     except Exception as e:
-        logger.error(f"Indexing failed: {str(e)}")
+        logger.error(f"Bulk Indexing failed: {str(e)}")
         return False
 
 
@@ -55,7 +57,7 @@ def re_index():
     except NotFoundError:
         old_index_name = None
 
-    logger.info(f"Existing index: {old_index_name}")
+    logger.info(f"Current index: {old_index_name}")
     new_index_name = f"{ALIAS}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
     try:
         MovieDocument.init(index=new_index_name)
@@ -75,13 +77,13 @@ def re_index():
                 ]
             }
             es.indices.update_aliases(body=body)
-            logger.info(f"Switched alias to new index {new_index_name}")
+            logger.info(f"Assigned alias {ALIAS} to index: {new_index_name}")
             es.indices.delete(index=old_index_name)
-            logger.info(f"Deleted old index {old_index_name}")
+            logger.info(f"Deleted old index: {old_index_name}")
         else:
             es.indices.put_alias(index=new_index_name, name=ALIAS)
-            logger.info(f"Created new index {new_index_name} with alias '{ALIAS}'")
-        logger.info("Indexing Completed!")
+            logger.info(f"Created new index {new_index_name} with alias {ALIAS}")
+        logger.info("Re-indexing Completed!")
     except Exception as e:
         logger.error(f"Reindex failed: {str(e)}")
         es.indices.delete(index=new_index_name, ignore=404)
