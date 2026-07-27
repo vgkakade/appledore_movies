@@ -38,7 +38,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("appledore_movies.api_urls")),
-    path("internal/movies/", include("appledore_movies.api_urls")),
+    path("internal/movies/", include("apps.movies.urls_internal")),
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),
