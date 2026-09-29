@@ -20,13 +20,14 @@ def get_products(request) -> list[dict] | Response:
         products = Movies.objects.filter(id__in=ids)
         response = [
             {
+                "id": product.id,
                 "title": product.title,
                 "price": product.price,
-                "stock": False if product.quantity else True,
+                "stock": True if product.quantity else False,
             }
             for product in products
         ]
-        return Response(response, status=200)
+        return Response({"items": response}, status=200)
     except ValueError:
         return Response({"error": "Invalid product"}, status=400)
 
