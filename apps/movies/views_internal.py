@@ -1,13 +1,21 @@
 from django.db import transaction
-from rest_framework.decorators import api_view
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.response import Response
 
 from .models import Movies
+from auth_sdk.authentication import AuthSDKAuthentication
+from auth_sdk.rbac import IsInternalService
 
 MAX_ALLOWED_QUANTITY = 5
 
 
 @api_view(["POST"])
+@authentication_classes([AuthSDKAuthentication])
+@permission_classes([IsInternalService])
 def reserve_product(request, id):
     try:
         quantity = int(request.data.get("quantity", 1))
@@ -31,7 +39,9 @@ def reserve_product(request, id):
         return Response({"error": "Invalid quantity provided."}, status=400)
 
 
-@api_view(["POST"])
+@api_view(["PATCH"])
+@authentication_classes([AuthSDKAuthentication])
+@permission_classes([IsInternalService])
 def release_product(request, id):
     """
     Release a reserved product by its ID.
