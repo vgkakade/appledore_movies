@@ -28,6 +28,20 @@ class MovieSearchView(APIView):
             s = Search(index=INDEX_ALIAS).extra(track_total_hits=True)
             s = s.query("match_all")
 
+            release_year = request.query_params.get("release_year", "").strip()
+            if release_year:
+                s = s.filter(
+                    "range",
+                    release_date={
+                        "gte": f"{release_year}-01-01",
+                        "lte": f"{release_year}-12-31",
+                    },
+                )
+
+            title = request.query_params.get("title", "").strip()
+            if title:
+                s = s.query("match", title={"query": title, "operator": "and"})
+
             # Genre filter
             genres = request.query_params.get("genre", "").strip()
             if genres:
@@ -49,6 +63,28 @@ class MovieSearchView(APIView):
             status = request.query_params.get("status", "")
             if status:
                 s = s.filter("term", status=status)
+
+            rating = request.query_params.get("rating", "")
+            if rating:
+                try:
+                    rating_value = float(rating)
+                    s = s.filter("range", rating={"gte": rating_value})
+                except ValueError:
+                    return Response(
+                        {"error": "Invalid rating value"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            price = request.query_params.get("price", "")
+            if price:
+                try:
+                    price_value = float(price)
+                    s = s.filter("range", price={"lte": price_value})
+                except ValueError:
+                    return Response(
+                        {"error": "Invalid price value"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
             s = s[offset : offset + limit]
             response = s.execute()
