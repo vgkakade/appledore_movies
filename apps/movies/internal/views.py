@@ -6,7 +6,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 
-from .models import Movies, ProductStatus
+from ..models import Movies, ProductStatus
 from auth_sdk.authentication import AuthSDKAuthentication
 from auth_sdk.rbac import IsInternalService
 
