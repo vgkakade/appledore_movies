@@ -6,7 +6,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.response import Response
 
-from .models import Movies
+from .models import Movies, ProductStatus
 from auth_sdk.authentication import AuthSDKAuthentication
 from auth_sdk.rbac import IsInternalService
 
@@ -25,6 +25,8 @@ def reserve_product(request, id):
             product = Movies.objects.select_for_update().get(id=id)
             if product.quantity == 0:
                 return Response({"error": "Out of stock"}, status=400)
+            if product.status != ProductStatus.ACTIVE:
+                return Response({"error": "Product unavailable"}, status=400)
             elif product.quantity >= quantity:
                 product.quantity -= quantity
                 product.save()
