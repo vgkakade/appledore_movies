@@ -143,7 +143,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 ELASTICSEARCH_DSL = {"default": {"hosts": ELASTICSEARCH_HOST}}
-ELASTICSEARCH_DSL_AUTOSYNC = False  # This disables auto-sync to ES on model save
+ELASTICSEARCH_DSL_AUTOSYNC = False  # Disable auto-sync to ES index on model save
 
 
 ######################### REDIS/CELERY CONFIGURATION #########################
