@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.pagination import LimitOffsetPagination
-from elasticsearch_dsl import Search
+from elasticsearch_dsl import Search, Q
 
 from .serializer import MovieDetailSerializer
 from .es_document import MovieDocument
@@ -18,91 +18,44 @@ class MovieSearchView(APIView):
     pagination_class = LimitOffsetPagination
 
     def get(self, request):
+        SORTABLE = {"rating", "price", "release_date"}
+        paginator = self.pagination_class()
+        paginator.default_limit = 50
+        limit = paginator.get_limit(request)
+        offset = paginator.get_offset(request)
+
+        INDEX_ALIAS = MovieDocument.Index.name
+        s = Search(index=INDEX_ALIAS).extra(track_total_hits=True)
+        s = s.query("match_all")
+        s = _parse_query_params(request, s)
+
+        ordering = request.query_params.get("ordering", "").strip()
+        field = ordering.lstrip("-")
+        if field in SORTABLE:
+            order = "desc" if ordering.startswith("-") else "asc"
+            s = s.sort({field: {"order": order}}, "_score", {"id": "asc"})
+        else:
+            s = s.sort("_score", {"rating": "desc"}, {"id": "asc"})
+
+        s = s[offset : offset + limit]
+
         try:
-            paginator = self.pagination_class()
-            paginator.default_limit = 50
-            limit = paginator.get_limit(request)
-            offset = paginator.get_offset(request)
-
-            INDEX_ALIAS = MovieDocument.Index.name
-            s = Search(index=INDEX_ALIAS).extra(track_total_hits=True)
-            s = s.query("match_all")
-
-            release_year = request.query_params.get("release_year", "").strip()
-            if release_year:
-                s = s.filter(
-                    "range",
-                    release_date={
-                        "gte": f"{release_year}-01-01",
-                        "lte": f"{release_year}-12-31",
-                    },
-                )
-
-            title = request.query_params.get("title", "").strip()
-            if title:
-                s = s.query("match", title={"query": title, "operator": "and"})
-
-            # Genre filter
-            genres = request.query_params.get("genre", "").strip()
-            if genres:
-                genre_list = [genre.strip() for genre in genres.split(",")]
-                s = s.filter("terms", genre=genre_list)
-
-            # language filter
-            languages = request.query_params.get("language", "").strip()
-            if languages:
-                language_list = [language.strip() for language in languages.split(",")]
-                s = s.filter("terms", language=language_list)
-
-            # cast filter
-            actors = request.query_params.get("cast", "").strip()
-            if actors:
-                actor_list = [actor.strip() for actor in actors.split(",")]
-                s = s.filter("terms", cast=actor_list)
-
-            status = request.query_params.get("status", "")
-            if status:
-                s = s.filter("term", status=status)
-
-            rating = request.query_params.get("rating", "")
-            if rating:
-                try:
-                    rating_value = float(rating)
-                    s = s.filter("range", rating={"gte": rating_value})
-                except ValueError:
-                    return Response(
-                        {"error": "Invalid rating value"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            price = request.query_params.get("price", "")
-            if price:
-                try:
-                    price_value = float(price)
-                    s = s.filter("range", price={"lte": price_value})
-                except ValueError:
-                    return Response(
-                        {"error": "Invalid price value"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            s = s[offset : offset + limit]
             response = s.execute()
+        except Exception:
+            logger.exception("Movie search failed")
+            return Response({"error": "Search unavailable"}, status=503)
 
-            results = []
-            for hit in response.hits:
-                data = hit.to_dict()
-                data["id"] = hit.meta.id
-                results.append(data)
+        results = []
+        for hit in response.hits:
+            data = hit.to_dict()
+            data["id"] = hit.meta.id
+            results.append(data)
 
-            paginator.count = response.hits.total.value
-            paginator.limit = limit
-            paginator.offset = offset
-            paginator.request = request
-            return paginator.get_paginated_response(results)
-        except Exception as e:
-            print("ERRPR", str(e))
-            return Response(status=500)
+        paginator.count = response.hits.total.value
+        paginator.limit = limit
+        paginator.offset = offset
+        paginator.request = request
+        return paginator.get_paginated_response(results)
 
 
 @api_view(["GET"])
@@ -114,3 +67,74 @@ def movie_detail(request, id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Movies.DoesNotExist:
         return Response({"data": "No such product"}, status=status.HTTP_404_NOT_FOUND)
+
+
+def _csv(values):
+    return [v.strip() for v in values.split(",") if v.strip()]
+
+
+def _parse_query_params(request, s):
+    params = request.query_params
+    release_year = params.get("release_year", "").strip()
+    if release_year:
+        s = s.filter(
+            "range",
+            release_date={
+                "gte": f"{release_year}-01-01",
+                "lte": f"{release_year}-12-31",
+            },
+        )
+
+    title = params.get("title", "").strip()
+    if title:
+        s = s.query("match", title={"query": title, "operator": "and"})
+
+    # Genre filter
+    genres = _csv(params.get("genre", ""))
+    if genres:
+        s = s.filter("terms", genre=genres)
+
+    # language filter
+    languages = _csv(params.get("language", ""))
+    if languages:
+        s = s.filter("terms", language=languages)
+
+    # cast filter
+    cast_list = _csv(params.get("cast", ""))
+    if cast_list:
+
+        def escape_wildcard(value: str) -> str:
+            value = value.replace("\\", "\\\\").replace("*", "\\*").replace("?", "\\?")
+            return value
+
+        s = s.filter(
+            Q(
+                "bool",
+                should=[
+                    Q(
+                        "wildcard",
+                        cast={
+                            "value": f"*{escape_wildcard(actor)}*",
+                            "case_insensitive": True,
+                        },
+                    )
+                    for actor in cast_list
+                ],
+            )
+        )
+
+    status = params.get("status", "")
+    if status:
+        s = s.filter("term", status=status)
+
+    for name, op in (("rating", "gte"), ("price", "lte")):
+        raw = params.get(name, "")
+        if raw:
+            try:
+                s = s.filter("range", **{name: {op: float(raw)}})
+            except ValueError:
+                return Response(
+                    {"error": f"Invalid {name} value"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+    return s
