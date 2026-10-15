@@ -5,8 +5,8 @@ PRODUCT_STATUS = (("active", "Active"), ("archieved", "Archieved"))
 
 class ProductStatus:
     ACTIVE = "active"
+    INACTIVE = "inactive"
     ARCHIVED = "archived"
-    DELETED = "deleted"
 
 
 class Actor(models.Model):
@@ -50,10 +50,15 @@ class Movies(models.Model):
         choices=[
             (ProductStatus.ACTIVE, "Active"),
             (ProductStatus.ARCHIVED, "Archived"),
-            (ProductStatus.DELETED, "Deleted"),
+            (ProductStatus.INACTIVE, "Inactive"),
         ],
         default=ProductStatus.ACTIVE,
     )
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        verbose_name = "Movie"
+        verbose_name_plural = "Movies"
+        ordering = ["title"]

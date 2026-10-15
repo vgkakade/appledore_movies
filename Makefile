@@ -9,7 +9,7 @@ init:
 	./manage.py superuserexists || ./manage.py createsuperuser
 
 serve:
-	./manage.py runserver 8000
+	./manage.py runserver 8010
 
 fixtures:
 	./manage.py loaddata fixtures/actors.json
@@ -23,5 +23,5 @@ superuser:
 celery:
 	celery -A appledore_movies worker --loglevel=info
 
-index_movies:
+movies_index:
 	./manage.py create_products_index

@@ -5,7 +5,7 @@ from django.conf import settings
 from elasticsearch import Elasticsearch, NotFoundError
 from elasticsearch.helpers import bulk
 
-from .models import Movies
+from .models import Movies, ProductStatus
 from .es_document import MovieDocument
 from appledore_movies.services.es_movie_serializer import serialize_movie
 
@@ -63,7 +63,9 @@ def re_index():
         MovieDocument.init(index=new_index_name)
         logger.info(f"New index created: {new_index_name}")
 
-        movies = Movies.objects.prefetch_related("language", "cast", "genre")
+        movies = Movies.objects.exclude(status=ProductStatus.ARCHIVED).prefetch_related(
+            "language", "cast", "genre"
+        )
         result = bulk_index(movies, new_index_name)
 
         if not result:

@@ -1,5 +1,6 @@
 def serialize_movie(movie):
     return {
+        "id": movie.id,
         "title": movie.title,
         "description": movie.description,
         "release_date": movie.release_date.isoformat() if movie.release_date else None,

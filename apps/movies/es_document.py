@@ -6,9 +6,10 @@ from .models import Movies, Genre, Actor, Language
 
 @registry.register_document
 class MovieDocument(Document):
-    genre = fields.KeywordField(multi=True)
-    language = fields.KeywordField(multi=True)
-    cast = fields.KeywordField(multi=True)
+    genre = fields.KeywordField(multi=True, normalizer="lowercase_normalizer")
+    language = fields.KeywordField(multi=True, normalizer="lowercase_normalizer")
+    cast = fields.KeywordField(multi=True, normalizer="lowercase_normalizer")
+    status = fields.KeywordField(normalizer="lowercase_normalizer")
 
     class Index:
         name = "products"
@@ -16,6 +17,11 @@ class MovieDocument(Document):
         settings = {
             "number_of_shards": 2,
             "number_of_replicas": 1,
+            "analysis": {
+                "normalizer": {
+                    "lowercase_normalizer": {"type": "custom", "filter": ["lowercase"]}
+                }
+            },
         }
 
     class Django:
@@ -27,6 +33,5 @@ class MovieDocument(Document):
             "release_date",
             "price",
             "rating",
-            "status",
         ]
         related_models = [Genre, Actor, Language]
