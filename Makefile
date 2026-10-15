@@ -9,7 +9,7 @@ init:
 	./manage.py superuserexists || ./manage.py createsuperuser
 
 serve:
-	./manage.py runserver 8000
+	./manage.py runserver 8010
 
 fixtures:
 	./manage.py loaddata fixtures/actors.json
