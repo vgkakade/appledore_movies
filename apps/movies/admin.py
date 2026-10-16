@@ -19,7 +19,8 @@ class MoviesAdmin(admin.ModelAdmin):
     list_display = ("title", "release_date", "duration", "price", "rating", "added_on")
     list_filter = ("release_date", "added_on", "language")
     sortable_by = ("title", "release_date", "price")
-    # search_fields = ('title', 'description')
+    search_fields = ("title", "description")
+    filter_horizontal = ("cast", "genre", "language")
 
 
 admin.site.register(Movies, MoviesAdmin)
