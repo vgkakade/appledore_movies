@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     "django_elasticsearch_dsl",
     # local
     "apps.movies",
-    "accounts",
 ]
 
 MIDDLEWARE = [
